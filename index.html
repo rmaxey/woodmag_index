@@ -621,7 +621,7 @@ function search() {
       if (!e.r.some(r => r.issue >= issueFrom && r.issue <= issueTo)) return false;
     }
     if (query) {
-      const hay = (e.c + ' ' + e.f).toLowerCase();
+      const hay = (e.c + ' ' + e.f).toLowerCase().replace(/\t/g, ' ');
       return hay.includes(query);
     }
     return true;
