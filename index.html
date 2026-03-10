@@ -583,9 +583,15 @@ function closeModal() {
 // ── Search ────────────────────────────────────────────────────────
 let debounceTimer;
 
+function parseQuery(raw) {
+  // Strip optional wrapping brackets [phrase] or quotes "phrase"
+  const stripped = raw.trim().replace(/^\[(.+)\]$/, '$1').replace(/^"(.+)"$/, '$1');
+  return stripped.toLowerCase();
+}
+
 function getFilters() {
   return {
-    query:     document.getElementById('searchInput').value.trim().toLowerCase(),
+    query:     parseQuery(document.getElementById('searchInput').value),
     section:   document.getElementById('sectionFilter').value,
     issueFrom: parseInt(document.getElementById('issueFrom').value) || 1,
     issueTo:   parseInt(document.getElementById('issueTo').value)   || 308,
@@ -616,7 +622,7 @@ function search() {
     }
     if (query) {
       const hay = (e.c + ' ' + e.f).toLowerCase();
-      return query.split(/\s+/).every(w => hay.includes(w));
+      return hay.includes(query);
     }
     return true;
   });
@@ -676,12 +682,8 @@ function search() {
       // Strip issue:page refs from display text (refs shown as chips instead)
       let displayText = e.f.replace(/,?\s*\d+:\d+(;\s*\d+:\d+)*/g, '').trim().replace(/,$/, '').trim();
       if (query) {
-        query.split(/\s+/).forEach(w => {
-          if (w) {
-            const rx = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
-            displayText = displayText.replace(rx, '<mark>$1</mark>');
-          }
-        });
+        const rx = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+        displayText = displayText.replace(rx, '<mark>$1</mark>');
       }
 
       const contextHtml = e.i > 0 && e.c
