@@ -578,7 +578,7 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+// Escape key handled below
 
 // ── Search ────────────────────────────────────────────────────────
 let debounceTimer;
@@ -658,10 +658,16 @@ function search() {
       const refsHtml = refsToShow.map(r => {
         const img   = pageImgUrl(r.issue, r.page);
         const title = e.f.split(',')[0].trim();
+        // Use data attributes to avoid quote-escaping issues with inline onclick
+        const safeTitle = title.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+        const safeSec   = sec.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+        const safeImg   = img.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
         return `<span class="ref-chip"
-            onclick="openModal(${r.issue},${r.page},${JSON.stringify(title)},${JSON.stringify(sec)})"
-            onmouseenter="showTooltip(event,${r.issue},${r.page},'${img}')"
-            onmouseleave="hideTooltip()"
+            data-issue="${r.issue}"
+            data-page="${r.page}"
+            data-title="${safeTitle}"
+            data-sec="${safeSec}"
+            data-img="${safeImg}"
             title="Issue ${r.issue}, page ${r.page}">
           <span class="ref-issue">${r.issue}</span><span class="ref-page">${r.page}</span>
         </span>`;
@@ -774,9 +780,35 @@ document.getElementById('modalOverlay').addEventListener('click', function(e) {
 });
 document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
 
-// ── Keyboard: Escape closes modal ────────────────────────────────
+// ── Keyboard: Escape closes modal ──────────────────────────────
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeModal();
+});
+
+// ── Chip click/hover via event delegation (CSP-safe) ───────────
+document.getElementById('results').addEventListener('click', function(e) {
+  const chip = e.target.closest('.ref-chip');
+  if (!chip) return;
+  const issue = parseInt(chip.dataset.issue);
+  const page  = parseInt(chip.dataset.page);
+  const title = chip.dataset.title;
+  const sec   = chip.dataset.sec;
+  openModal(issue, page, title, sec);
+});
+
+document.getElementById('results').addEventListener('mouseover', function(e) {
+  const chip = e.target.closest('.ref-chip');
+  if (!chip) return;
+  const issue = parseInt(chip.dataset.issue);
+  const page  = parseInt(chip.dataset.page);
+  const img   = chip.dataset.img;
+  showTooltip(e, issue, page, img);
+});
+
+document.getElementById('results').addEventListener('mouseout', function(e) {
+  const chip = e.target.closest('.ref-chip');
+  if (!chip) return;
+  hideTooltip();
 });
 </script>
 </body>
