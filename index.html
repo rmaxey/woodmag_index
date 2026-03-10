@@ -622,7 +622,7 @@ function search() {
     }
     if (query) {
       const hay = (e.c + ' ' + e.f).toLowerCase().replace(/\t/g, ' ');
-      return hay.includes(query);
+      return query.split(/\s+/).every(w => hay.includes(w));
     }
     return true;
   });
@@ -682,8 +682,12 @@ function search() {
       // Strip issue:page refs from display text (refs shown as chips instead)
       let displayText = e.f.replace(/,?\s*\d+:\d+(;\s*\d+:\d+)*/g, '').trim().replace(/,$/, '').trim();
       if (query) {
-        const rx = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
-        displayText = displayText.replace(rx, '<mark>$1</mark>');
+        query.split(/\s+/).forEach(w => {
+          if (w) {
+            const rx = new RegExp('(' + w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+            displayText = displayText.replace(rx, '<mark>$1</mark>');
+          }
+        });
       }
 
       const contextHtml = e.i > 0 && e.c
